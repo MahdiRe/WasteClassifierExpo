@@ -3,7 +3,6 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// Firebase configuration (replace with your own config)
 const firebaseConfig = {
     apiKey: "AIzaSyAOyGt5f4IQom3ZN9_J8KKxRierrt0vwoU",
     authDomain: "wasteclassifierexpo.firebaseapp.com",
@@ -37,11 +36,11 @@ class FirebaseService {
             querySnapshot.forEach((doc) => {
                 dataList.push({ id: doc.id, ...doc.data() });
             });
-            return dataList; // Return an array of data objects
+            return dataList;
         } catch (error) {
             console.error("Error getting documents: ", error);
         }
     }
 }
 
-export default new FirebaseService(); // Export an instance of the class
+export default new FirebaseService();
