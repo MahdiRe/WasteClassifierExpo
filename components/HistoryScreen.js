@@ -20,8 +20,9 @@ const HistoryScreen = () => {
         setLoading(false);
     };
 
-    const deleteImage = async (imageUri) => {
-        setImages(images.filter((img) => img.uri !== imageUri));
+    const deleteImage = async (id) => {
+        await FirebaseService.delete('img-data', id);
+        fetchImages();
     };
 
     const previewImageHandler = (uri) => {
@@ -29,8 +30,9 @@ const HistoryScreen = () => {
         setModalVisible(true);
     };
 
-    const deleteAll = () => {
-
+    const deleteAll = async () => {
+        await FirebaseService.deleteAll('img-data');
+        fetchImages();
     }
 
     return (
@@ -54,7 +56,7 @@ const HistoryScreen = () => {
                                 <Text style={styles.title} numberOfLines={1}>{item.fileName.split('.', 2)[0]}</Text>
                                 <Text style={styles.type}>{item.type}</Text>
                             </View>
-                            <TouchableOpacity onPress={() => deleteImage(item.uri)}>
+                            <TouchableOpacity onPress={() => deleteImage(item.id)}>
                                 <MaterialIcons name="delete" size={24} color="red" style={styles.deleteIcon} />
                             </TouchableOpacity>
                         </View>
@@ -77,7 +79,7 @@ const HistoryScreen = () => {
             )}
 
             <View style={styles.bottomContainer}>
-                <Button title="Refresh Data" onPress={fetchImages} />
+                <Button title="Refresh Data" onPress={fetchImages} disabled={loading}/>
                 <Button title={`Delete All (${images.length || 0})`} onPress={deleteAll} disabled={images.length === 0} />
             </View>
         </View>
