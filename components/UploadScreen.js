@@ -3,9 +3,9 @@ import { View, Button, Image, FlatList, Text, TouchableOpacity, StyleSheet, Moda
 import * as ImagePicker from 'expo-image-picker';
 
 const UploadScreen = () => {
-    const [images, setImages] = useState([]);  // List of image objects with uri and disposeType
-    const [previewImage, setPreviewImage] = useState(null);  // Stores the image URI for preview
-    const [modalVisible, setModalVisible] = useState(false);  // Manages the visibility of the preview modal
+    const [images, setImages] = useState([]);
+    const [previewImage, setPreviewImage] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
 
     // Handle image picking
     const pickImages = async () => {
@@ -17,20 +17,17 @@ const UploadScreen = () => {
 
         if (!result.canceled) {
             const newImage = result.assets[0];
-            const disposeType = images.length % 2 === 0 ? 'Organic' : 'Disposable';  // Set type based on even/odd index
-            const obj = { uri: newImage, disposeType };  // Create new image object
+            newImage.type = images.length % 2 === 0 ? 'Organic' : 'Disposable';
 
-            setImages((prevImages) => [...prevImages, obj]);  // Add new image object to the list
+            setImages((prevImages) => [...prevImages, newImage]);
             setTimeout(() => console.log(images), 1000)
         }
     };
 
-    // Handle image deletion
     const deleteImage = async (imageUri) => {
         setImages(images.filter((img) => img.uri !== imageUri));
     };
 
-    // Open the image in preview modal
     const previewImageHandler = (uri) => {
         setPreviewImage(uri);
         setModalVisible(true);
@@ -45,9 +42,9 @@ const UploadScreen = () => {
                     renderItem={({ item }) => (
                         <View style={styles.imageContainer}>
                             <TouchableOpacity onPress={() => previewImageHandler(item.uri)}>
-                                <Image source={{ uri: item.uri.uri }} style={styles.thumbnail} />
+                                <Image source={{ uri: item.uri }} style={styles.thumbnail} />
                             </TouchableOpacity>
-                            <Text style={styles.title}>{item.disposeType}</Text>
+                            <Text style={styles.title}>{item.fileName.split('.', 2)[0]} - <b>{item.type}</b></Text>
                             <TouchableOpacity onPress={() => deleteImage(item.uri)}>
                                 <Text style={styles.deleteButton}>Delete</Text>
                             </TouchableOpacity>
@@ -63,7 +60,7 @@ const UploadScreen = () => {
                         onRequestClose={() => setModalVisible(false)}
                     >
                         <View style={styles.modalContainer}>
-                            <Image source={{ uri: previewImage.uri }} style={styles.previewImage} />
+                            <Image source={{ uri: previewImage }} style={styles.previewImage} />
                             <Button title="Close" onPress={() => setModalVisible(false)} />
                         </View>
                     </Modal>
