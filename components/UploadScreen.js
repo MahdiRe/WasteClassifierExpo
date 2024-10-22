@@ -1,146 +1,90 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Image, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Button, Image, FlatList, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';  // Firebase storage functions
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';  // Firestore functions
-import { db, storage } from './config/firebaseConfig';  // Import initialized Firebase config
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UploadScreen = () => {
-    const [image, setImage] = useState(null);  // Holds the selected image URI
-    const [loading, setLoading] = useState(false);  // Loading state for classification
-    const [classification, setClassification] = useState('');  // Holds the classification result
-    const [uploading, setUploading] = useState(false);  // Uploading state
+    const [images, setImages] = useState([]);  // List of image objects with uri and disposeType
+    const [previewImage, setPreviewImage] = useState(null);  // Stores the image URI for preview
+    const [modalVisible, setModalVisible] = useState(false);  // Manages the visibility of the preview modal
 
-    const pickImage = async () => {
+    // Handle image picking
+    const pickImages = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [4, 3],
             quality: 1,
         });
 
         if (!result.canceled) {
-            setImage(result.uri);
-            classifyImage(result.uri);  // Classify the image after selection
+            const newImage = result.assets[0];
+            const disposeType = images.length % 2 === 0 ? 'Organic' : 'Disposable';  // Set type based on even/odd index
+            const obj = { uri: newImage, disposeType };  // Create new image object
+
+            setImages((prevImages) => [...prevImages, obj]);  // Add new image object to the list
+            setTimeout(() => console.log(images), 1000)
         }
     };
 
-    const classifyImage = async (imageUri) => {
-        setLoading(true);
-
-        setTimeout(() => {
-            // Simulate a classification result
-            const randomResult = Math.random() < 0.4 ? 'Organic' : Math.random() < 0.5 ? 'Disposable' : 'Not Sure';
-            setClassification(randomResult);
-            setLoading(false);
-        }, 2000);
+    // Handle image deletion
+    const deleteImage = async (imageUri) => {
+        setImages(images.filter((img) => img.uri !== imageUri));
     };
 
-    const saveImage = async () => {
-        if (!image) {
-            Alert.alert('No image selected', 'Please upload an image before saving.');
-            return;
-        }
-
-        setUploading(true);
-        const filename = image.substring(image.lastIndexOf('/') + 1);
-
-        try {
-            const response = await fetch(image);
-            const blob = await response.blob();
-
-            // Upload image to Firebase Storage
-            const storageRef = ref(storage, `images/${filename}`);
-            await uploadBytes(storageRef, blob);
-
-            // Get image download URL
-            const downloadURL = await getDownloadURL(storageRef);
-
-            // Save classification result and image URL to Firestore
-            await addDoc(collection(db, 'classifications'), {
-                imageUrl: downloadURL,
-                result: classification,
-                timestamp: serverTimestamp(),
-            });
-
-            // Save image and classification result locally (offline mode)
-            const localData = {
-                imageUrl: downloadURL,
-                result: classification,
-                timestamp: new Date().toISOString(),
-            };
-            await AsyncStorage.setItem(`@classification_${filename}`, JSON.stringify(localData));
-
-            Alert.alert('Success', 'Image and classification saved successfully!');
-        } catch (error) {
-            console.error(error);
-            Alert.alert('Error', 'Failed to save the image.');
-        } finally {
-            setUploading(false);
-        }
+    // Open the image in preview modal
+    const previewImageHandler = (uri) => {
+        setPreviewImage(uri);
+        setModalVisible(true);
     };
 
     return (
-        <View style={styles.screen}>
-            <Button title="Upload Image" onPress={pickImage} />
+        <View>
+            <View style={styles.container}>
+                <FlatList
+                    data={images}
+                    keyExtractor={(item, index) => index.toString()}
+                    renderItem={({ item }) => (
+                        <View style={styles.imageContainer}>
+                            <TouchableOpacity onPress={() => previewImageHandler(item.uri)}>
+                                <Image source={{ uri: item.uri.uri }} style={styles.thumbnail} />
+                            </TouchableOpacity>
+                            <Text style={styles.title}>{item.disposeType}</Text>
+                            <TouchableOpacity onPress={() => deleteImage(item.uri)}>
+                                <Text style={styles.deleteButton}>Delete</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                />
 
-            {image && (
-                <View style={styles.previewContainer}>
-                    <Text style={styles.text}>Image Preview:</Text>
-                    <Image source={{ uri: image }} style={styles.image} />
-                </View>
-            )}
-
-            {loading && <ActivityIndicator size="large" color="#0000ff" />}
-
-            {!loading && classification && (
-                <View style={styles.resultContainer}>
-                    <Text style={styles.text}>Classification Result:</Text>
-                    <Text style={styles.classification}>{classification}</Text>
-                </View>
-            )}
-
-            {!uploading && image && classification && (
-                <Button title="Save" onPress={saveImage} />
-            )}
-
-            {uploading && <ActivityIndicator size="large" color="#0000ff" />}
+                {modalVisible && (
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible}
+                        onRequestClose={() => setModalVisible(false)}
+                    >
+                        <View style={styles.modalContainer}>
+                            <Image source={{ uri: previewImage.uri }} style={styles.previewImage} />
+                            <Button title="Close" onPress={() => setModalVisible(false)} />
+                        </View>
+                    </Modal>
+                )}
+            </View>
+            <View style={styles.uploadBtn}>
+                <Button title="Upload Image" onPress={pickImages} />
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    previewContainer: {
-        marginTop: 20,
-        alignItems: 'center',
-        width: '100%',
-        height: '50%',  // Set image preview to take 50% of the screen
-    },
-    image: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'contain',
-    },
-    resultContainer: {
-        marginTop: 20,
-        alignItems: 'center',
-    },
-    text: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    classification: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'green',
-    },
+    container: { minHeight: 700, flex: 1, padding: 10, backgroundColor: 'lightgrey' },
+    imageContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+    thumbnail: { width: 50, height: 50, marginRight: 10 },
+    title: { flex: 1, fontSize: 16 },
+    deleteButton: { color: 'red', fontWeight: 'bold' },
+    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.8)' },
+    previewImage: { width: '80%', height: '80%', resizeMode: 'contain' },
+    uploadBtn: { width: '100%', marginTop: 20 }
 });
 
 export default UploadScreen;
