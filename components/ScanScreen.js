@@ -10,6 +10,7 @@ const ScanScreen = () => {
     const [image, setImage] = useState(null);
     const [isCameraVisible, setIsCameraVisible] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const getCameraPermissions = async () => {
@@ -38,15 +39,17 @@ const ScanScreen = () => {
     };
 
     const saveToFirebase = async () => {
+        setLoading(true);
         try {
             image.type = "Disposable";
             await FirebaseService.setData('img-data', image);
             setImage(null);
             setIsCameraVisible(true);
-            setModalVisible(false);
         } catch (err) {
             console.error('Error saving images to Firebase:', err);
+        }finally{
             setModalVisible(false);
+            setLoading(false);
         }
     }
 
@@ -94,6 +97,7 @@ const ScanScreen = () => {
                 text="This is disposable."
                 onCancel={() => setModalVisible(false)}
                 onSave={saveToFirebase}
+                saveload={loading}
             />
         </View>
     );

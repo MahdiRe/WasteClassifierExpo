@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Button, Image, FlatList, Text, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import FirebaseService from './config/FirebaseService';
 import { MaterialIcons } from '@expo/vector-icons';
+import Notify from './Notify';
 
 const UploadScreen = () => {
     const [images, setImages] = useState([]);
@@ -12,6 +13,9 @@ const UploadScreen = () => {
     const [selectedImages, setSelectedImages] = useState([]);
     const [loading, setLoading] = useState(false);
     const namesArr = ['Polythene Bag', 'Slipper', 'Glass Bottle', 'Food Item', 'Paper/Board'];
+    const [notifyVisible, setNotifyVisible] = useState(false);
+    const [notifyMode, setNotifyMode] = useState("");
+    const uriToDelete = useRef(null);
 
     // Handle image picking
     const pickImages = async () => {
@@ -28,8 +32,9 @@ const UploadScreen = () => {
         }
     };
 
-    const deleteImage = async (imageUri) => {
-        setImages(images.filter((img) => img.uri !== imageUri));
+    const deleteImage = async () => {
+        setImages(images.filter((img) => img.uri !== uriToDelete.current));
+        setNotifyVisible(false);
     };
 
     const previewImageHandler = (uri) => {
@@ -55,20 +60,23 @@ const UploadScreen = () => {
             }
             setSelectedImages([]);
             setImages([]);
-            Alert.alert('Success', 'All selected images saved successfully.');
         } catch (error) {
             console.error('Error saving images to Firebase:', error);
-            Alert.alert('Error', 'Failed to save images.');
         } finally {
             setLoading(false);
+            setNotifyVisible(false);
         }
     };
 
+    const btnClicked = (type, uri) => {
+        setNotifyVisible(true);
+        setNotifyMode(type);
+        if (uri) uriToDelete.current = uri;
+    }
+
     return (
         <View style={styles.container}>
-            {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
-            ) : images.length === 0 ? (
+            {images.length === 0 ? (
                 <View style={styles.noImagesContainer}>
                     <Text style={styles.noImagesText}>No images selected</Text>
                 </View>
@@ -90,7 +98,7 @@ const UploadScreen = () => {
                                 <Text style={styles.title} numberOfLines={1}>{namesArr[Math.floor(Math.random() * namesArr.length)]}</Text>
                                 <Text style={styles.type}>{item.type}</Text>
                             </View>
-                            <TouchableOpacity onPress={() => deleteImage(item.uri)}>
+                            <TouchableOpacity onPress={() => btnClicked('Delete', item.uri)}>
                                 <MaterialIcons name="delete" size={24} color="red" style={styles.deleteIcon} />
                             </TouchableOpacity>
                         </View>
@@ -114,8 +122,17 @@ const UploadScreen = () => {
 
             <View style={styles.bottomContainer}>
                 <Button title="Upload Image" onPress={pickImages} />
-                <Button title="Save Selected" onPress={saveToFirebase} disabled={selectedImages.length === 0} />
+                <Button title="Save Selected" onPress={() => btnClicked('Save')} disabled={selectedImages.length === 0} />
             </View>
+
+            <Notify
+                visible={notifyVisible}
+                text={notifyMode == 'Save' ? "Save Selected?" : "Confirm Delete?"}
+                onCancel={() => setNotifyVisible(false)}
+                onSave={notifyMode == 'Save' ? saveToFirebase : deleteImage}
+                saveText={notifyMode}
+                saveload={loading}
+            />
         </View>
     );
 };

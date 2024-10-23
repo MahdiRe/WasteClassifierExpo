@@ -1,7 +1,7 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 
-const Notify = ({ visible, text, header, onCancel, onSave }) => {
+const Notify = ({ visible, text, header, onCancel, onSave, saveload, saveText }) => {
     return (
         <Modal
             animationType="slide"
@@ -13,21 +13,34 @@ const Notify = ({ visible, text, header, onCancel, onSave }) => {
                 <View style={styles.modalView}>
                     {header && <Text style={styles.modalText}><b>{header}</b></Text>}
                     <Text style={styles.modalText}>{text}</Text>
-                    <View style={styles.modalButtons}>
-                        {onCancel && (
-                            <TouchableOpacity
-                                style={[styles.button, !onSave && styles.fullWidthButton]}
-                                onPress={onCancel}
-                            >
-                                <Text style={styles.buttonText}>Cancel</Text>
-                            </TouchableOpacity>
-                        )}
-                        {onSave && (
-                            <TouchableOpacity style={styles.button} onPress={onSave}>
-                                <Text style={styles.buttonText}>Save</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
+
+                    {saveload ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#2196F3" />
+                            <Text style={styles.loadingText}>Saving to DB...</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.modalButtons}>
+                            {onCancel && (
+                                <TouchableOpacity
+                                    style={[styles.button, !onSave && styles.fullWidthButton]}
+                                    onPress={onCancel}
+                                    disabled={saveload}
+                                >
+                                    <Text style={styles.buttonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            )}
+                            {onSave && (
+                                <TouchableOpacity
+                                    style={styles.button}
+                                    onPress={onSave}
+                                    disabled={saveload}
+                                >
+                                    <Text style={styles.buttonText}>{saveText || "Save"}</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
                 </View>
             </View>
         </Modal>
@@ -76,6 +89,15 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         color: 'white',
+        fontSize: 16,
+    },
+    loadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingText: {
+        marginLeft: 10,
         fontSize: 16,
     },
 });
