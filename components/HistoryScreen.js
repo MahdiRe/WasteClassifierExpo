@@ -99,12 +99,12 @@ const HistoryScreen = () => {
 
             <Notify
                 visible={open}
-                text={notifyMode == 'fetch' ? "Fetch All Data" : `Confirm Delete${notifyMode != 'Delete' ? " All" : ""}?`}
-                onCancel={notifyMode != 'fetch' ? () => setOpen(false) : undefined}
-                onSave={notifyMode == 'Delete' ? deleteImage : notifyMode == 'Delete All' ? deleteAll : undefined}
+                text={notifyMode === 'fetch' ? "Fetching Data" : `Confirm Delete${notifyMode !== 'Delete' ? " All" : ""}?`}
+                onCancel={notifyMode !== 'fetch' ? () => setOpen(false) : undefined}
+                onSave={notifyMode === 'Delete' ? deleteImage : notifyMode === 'Delete All' ? deleteAll : undefined}
                 saveload={loading}
                 saveText={notifyMode}
-                loadText={notifyMode == 'fetch' ? "Loading Data" : notifyMode == 'Delete' ? "Deleting Data" : "Deleteing All Data"}
+                loadText={notifyMode === 'fetch' ? "Loading Data" : notifyMode === 'Delete' ? "Deleting Data" : "Deleting All Data"}
             />
         </View>
     );
