@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 
-const Notify = ({ visible, text, header, onCancel, onSave, saveload, saveText }) => {
+const Notify = ({ visible, text, header, onCancel, onSave, saveload, saveText, loadText }) => {
     return (
         <Modal
             animationType="slide"
@@ -17,7 +17,7 @@ const Notify = ({ visible, text, header, onCancel, onSave, saveload, saveText })
                     {saveload ? (
                         <View style={styles.loadingContainer}>
                             <ActivityIndicator size="large" color="#2196F3" />
-                            <Text style={styles.loadingText}>Saving to DB...</Text>
+                            <Text style={styles.loadingText}>{`${loadText || "Saving to DB"}...`}</Text>
                         </View>
                     ) : (
                         <View style={styles.modalButtons}>

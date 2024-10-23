@@ -1,28 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Button, Image, FlatList, Text, TouchableOpacity, StyleSheet, Modal, ActivityIndicator } from 'react-native';
 import FirebaseService from './config/FirebaseService';
 import { MaterialIcons } from '@expo/vector-icons';
+import Notify from './Notify';
 
 const HistoryScreen = () => {
     const [images, setImages] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [notifyMode, setNotifyMode] = useState("");
     const namesArr = ['Polythene Bag', 'Slipper', 'Glass Bottle', 'Food Item', 'Paper/Board'];
+    const idToDelete = useRef(null);
 
     useEffect(() => {
         fetchImages();
     }, []);
 
     const fetchImages = async () => {
+        setNotifyMode('fetch')
+        setOpen(true);
         setLoading(true);
         const imagesFromFirebase = await FirebaseService.getData('img-data');
         setImages(imagesFromFirebase);
+        setOpen(false);
         setLoading(false);
     };
 
-    const deleteImage = async (id) => {
-        await FirebaseService.delete('img-data', id);
+    const deleteImage = async () => {
+        setLoading(true);
+        await FirebaseService.delete('img-data', idToDelete);
         fetchImages();
     };
 
@@ -32,15 +40,20 @@ const HistoryScreen = () => {
     };
 
     const deleteAll = async () => {
+        setLoading(true);
         await FirebaseService.deleteAll('img-data');
         fetchImages();
     }
 
+    const btnClicked = (type, id) => {
+        setOpen(true);
+        setNotifyMode(type);
+        if (id) idToDelete.current = id;
+    }
+
     return (
         <View style={styles.container}>
-            {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
-            ) : images.length === 0 ? (
+            {images.length === 0 ? (
                 <View style={styles.noImagesContainer}>
                     <Text style={styles.noImagesText}>No images saved yet!</Text>
                 </View>
@@ -57,7 +70,7 @@ const HistoryScreen = () => {
                                 <Text style={styles.title} numberOfLines={1}>{namesArr[Math.floor(Math.random() * namesArr.length)]}</Text>
                                 <Text style={styles.type}>{item.type}</Text>
                             </View>
-                            <TouchableOpacity onPress={() => deleteImage(item.id)}>
+                            <TouchableOpacity onPress={() => btnClicked("Delete", item.id)}>
                                 <MaterialIcons name="delete" size={24} color="red" style={styles.deleteIcon} />
                             </TouchableOpacity>
                         </View>
@@ -80,9 +93,19 @@ const HistoryScreen = () => {
             )}
 
             <View style={styles.bottomContainer}>
-                <Button title="Refresh Data" onPress={fetchImages} disabled={loading}/>
-                <Button title={`Delete All (${images.length || 0})`} onPress={deleteAll} disabled={images.length === 0} />
+                <Button title="Refresh Data" onPress={fetchImages} disabled={loading} />
+                <Button title={`Delete All (${images.length || 0})`} onPress={() => btnClicked("Delete All")} disabled={images.length === 0} />
             </View>
+
+            <Notify
+                visible={open}
+                text={notifyMode == 'fetch' ? "Fetch All Data" : `Confirm Delete${notifyMode != 'Delete' ? " All" : ""}?`}
+                onCancel={notifyMode != 'fetch' ? () => setOpen(false) : undefined}
+                onSave={notifyMode == 'Delete' ? deleteImage : notifyMode == 'Delete All' ? deleteAll : undefined}
+                saveload={loading}
+                saveText={notifyMode}
+                loadText={notifyMode == 'fetch' ? "Loading Data" : notifyMode == 'Delete' ? "Deleting Data" : "Deleteing All Data"}
+            />
         </View>
     );
 };
