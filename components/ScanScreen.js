@@ -6,7 +6,7 @@ const ScanScreen = () => {
     const [hasPermission, setHasPermission] = useState(null);
     const [cameraRef, setCameraRef] = useState(null);
     const [image, setImage] = useState(null);
-    const [isCameraVisible, setIsCameraVisible] = useState(false);
+    const [isCameraVisible, setIsCameraVisible] = useState(true);
 
     useEffect(() => {
         const getCameraPermissions = async () => {
@@ -18,10 +18,35 @@ const ScanScreen = () => {
     }, []);
 
     const takePicture = async () => {
-        if (cameraRef) {
-            const photo = await cameraRef.takePictureAsync();
-            setImage(photo.uri);
-            setIsCameraVisible(false);
+        if (!image) {
+            if (cameraRef) {
+                const photo = await cameraRef.takePictureAsync();
+                setImage(photo.uri);
+                setIsCameraVisible(false);
+            }
+        } else {
+            setImage(null);
+            setIsCameraVisible(true);
+        }
+    };
+
+    const handleCheck = () => {
+        if (image) {
+            Alert.alert(
+                'Image Check',
+                'This is disposable.',
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                    },
+                    { text: 'Save', onPress: () => console.log('Save Pressed') },
+                ],
+                { cancelable: true }
+            );
+        } else {
+            Alert.alert('No image to check');
         }
     };
 
@@ -43,11 +68,7 @@ const ScanScreen = () => {
     return (
         <View style={styles.container}>
             {isCameraVisible ? (
-                <Camera style={styles.camera} ref={(ref) => setCameraRef(ref)}>
-                    <View>
-                        <Button title="Capture" onPress={takePicture} />
-                    </View>
-                </Camera>
+                <Camera style={styles.camera} ref={(ref) => setCameraRef(ref)} />
             ) : (
                 <View style={styles.previewContainer}>
                     {image ? (
@@ -59,8 +80,13 @@ const ScanScreen = () => {
             )}
 
             <View style={styles.bottomContainer}>
-                <Button title="Scan New" onPress={() => setIsCameraVisible(true)} disabled={!hasPermission || isCameraVisible}/>
-                <Button title="Dispose Type?" onPress={() => Alert.alert('Image Check', 'Image is available!')} disabled={!image} />
+                {!image ? (
+                    <Button title="Capture" onPress={takePicture} disabled={!hasPermission} />
+                ) : (
+                    <Button title="Re-Capture" onPress={takePicture} disabled={!hasPermission} />
+                )
+                }
+                <Button title="Check" onPress={handleCheck} disabled={!image} />
             </View>
         </View>
     );
@@ -82,16 +108,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     image: {
-        width: 300,
+        flex: 1,
+        width: 400,
         height: 400,
-        marginBottom: 20,
-    },
-    buttonsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        width: '100%',
-        paddingHorizontal: 20,
-        marginBottom: 20,
     },
     noPermissionText: {
         fontSize: 18,
