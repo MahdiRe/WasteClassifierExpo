@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Button, Image, FlatList, Text, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator, CheckBox } from 'react-native';
+import { View, Button, Image, FlatList, Text, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator } from 'react-native';
+import { Checkbox } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import FirebaseService from './config/FirebaseService';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -76,9 +77,9 @@ const UploadScreen = () => {
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item }) => (
                         <View style={styles.imageContainer}>
-                            <CheckBox
-                                value={selectedImages.includes(item.uri)}
-                                onValueChange={() => toggleImageSelection(item.uri)}
+                            <Checkbox
+                                status={selectedImages.includes(item.uri) ? 'checked' : 'unchecked'}
+                                onPress={() => toggleImageSelection(item.uri)}
                                 style={styles.checkbox}
                             />
                             <TouchableOpacity onPress={() => previewImageHandler(item.uri)}>
