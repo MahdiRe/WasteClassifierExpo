@@ -1,96 +1,116 @@
 import React, { useState, useEffect } from 'react';
-import { View, Button, Image, StyleSheet, Alert, Text } from 'react-native';
+import { View, Button, Image, StyleSheet, Text, Alert } from 'react-native';
 import { Camera } from 'expo-camera';
 
 const ScanScreen = () => {
     const [hasPermission, setHasPermission] = useState(null);
     const [cameraRef, setCameraRef] = useState(null);
     const [image, setImage] = useState(null);
-    const [error, setError] = useState(false);
+    const [isCameraVisible, setIsCameraVisible] = useState(false);
 
     useEffect(() => {
         const getCameraPermissions = async () => {
-            try {
-                const { status } = await Camera.getCameraPermissionsAsync();
-                setHasPermission(status === 'granted');
-            } catch (err) {
-                console.error('Camera permission error:', err);
-                Alert.alert('Error', 'Failed to get camera permissions.');
-                setHasPermission(false);
-            }
+            const { status } = await Camera.requestCameraPermissionsAsync();
+            setHasPermission(status === 'granted');
         };
 
         getCameraPermissions();
     }, []);
 
+    const takePicture = async () => {
+        if (cameraRef) {
+            const photo = await cameraRef.takePictureAsync();
+            setImage(photo.uri);
+            setIsCameraVisible(false);
+        }
+    };
+
+    // Check permission status and render appropriate UI
     if (hasPermission === null) {
         return <View />;
     }
 
-    // if (hasPermission === false) {
-    //     // return <Text>No access to camera</Text>;
-    // }
-
-    const takePicture = async () => {
-        try {
-            if (cameraRef) {
-                const photo = await cameraRef.takePictureAsync();
-                setImage(photo.uri);
-                setError(false);
-            }
-        } catch (err) {
-            console.error('Error capturing image:', err);
-            setError(true);
-            Alert.alert('Error', 'Failed to capture image.');
-        }
-    };
-
-    const saveImage = async () => {
-        try {
-            Alert.alert('Saved', 'Your image has been saved.');
-        } catch (err) {
-            console.error('Error saving image:', err);
-            Alert.alert('Error', 'Failed to save the image.');
-        }
-    };
+    if (hasPermission === false) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.noPermissionText}>No permission granted</Text>
+                <Button title="Scan" onPress={() => { }} disabled={true} />
+                <Button title="Check" onPress={() => { }} disabled={true} />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
-            {hasPermission ? (
-                !image ? (
-                    <Camera style={styles.camera} ref={(ref) => setCameraRef(ref)}>
-                        <View>
-                            <Button title="Capture" onPress={takePicture} />
-                        </View>
-                    </Camera>
-                ) : (
-                    <View style={styles.previewContainer}>
-                        {/* Show captured image if available */}
-                        <Image source={{ uri: image }} style={styles.image} />
-                        <Button title="Save" onPress={saveImage} />
-                        <Button title="Scan New" style={styles.scanBtn} onPress={() => setImage(null)} />
+            {isCameraVisible ? (
+                <Camera style={styles.camera} ref={(ref) => setCameraRef(ref)}>
+                    <View>
+                        <Button title="Capture" onPress={takePicture} />
                     </View>
-                )
+                </Camera>
             ) : (
                 <View style={styles.previewContainer}>
-                    {/* If there's an error, show the static image */}
-                    <Image source={require('../assets/nocam.jpg')} style={styles.image} />
-                    <View style={styles.scanBtn}>
-                        <Button title="Scan New" onPress={() => setError(false)} />
-                    </View>
+                    {image ? (
+                        <Image source={{ uri: image }} style={styles.image} />
+                    ) : (
+                        <Text>No image captured</Text>
+                    )}
                 </View>
             )}
-        </View>
 
+            <View style={styles.bottomContainer}>
+                <Button title="Scan New" onPress={() => setIsCameraVisible(true)} disabled={!hasPermission || isCameraVisible}/>
+                <Button title="Dispose Type?" onPress={() => Alert.alert('Image Check', 'Image is available!')} disabled={!image} />
+            </View>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    camera: { flex: 1, width: '100%' },
-    previewContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    image: { width: 400, height: 680, marginBottom: -40 },
-    scanBtn: { width: '100%', marginTop: 20 }
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    camera: {
+        flex: 1,
+        width: '100%',
+    },
+    previewContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    image: {
+        width: 300,
+        height: 400,
+        marginBottom: 20,
+    },
+    buttonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+        paddingHorizontal: 20,
+        marginBottom: 20,
+    },
+    noPermissionText: {
+        fontSize: 18,
+        color: 'red',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    bottomContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#f8f8f8',
+        padding: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        borderTopWidth: 1,
+        borderTopColor: '#ccc',
+    },
 });
 
 export default ScanScreen;

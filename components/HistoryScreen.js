@@ -8,6 +8,7 @@ const HistoryScreen = () => {
     const [previewImage, setPreviewImage] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(false);
+    const namesArr = ['Polythene Bag', 'Slipper', 'Glass Bottle', 'Food Item', 'Paper/Board'];
 
     useEffect(() => {
         fetchImages();
@@ -53,7 +54,7 @@ const HistoryScreen = () => {
                                 <Image source={{ uri: item.uri }} style={styles.thumbnail} />
                             </TouchableOpacity>
                             <View style={styles.textContainer}>
-                                <Text style={styles.title} numberOfLines={1}>{item.fileName.split('.', 2)[0]}</Text>
+                                <Text style={styles.title} numberOfLines={1}>{namesArr[Math.floor(Math.random() * namesArr.length)]}</Text>
                                 <Text style={styles.type}>{item.type}</Text>
                             </View>
                             <TouchableOpacity onPress={() => deleteImage(item.id)}>
