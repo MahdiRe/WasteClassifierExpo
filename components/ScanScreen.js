@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Button, Image, StyleSheet, Text, Modal, TouchableOpacity } from 'react-native';
 import { Camera } from 'expo-camera';
 import FirebaseService from './config/FirebaseService';
+import Notify from './Notify';
 
 const ScanScreen = () => {
     const [hasPermission, setHasPermission] = useState(null);
@@ -87,35 +88,13 @@ const ScanScreen = () => {
                 <Button title="Check" onPress={handleCheck} disabled={!image} />
             </View>
 
-            <Modal
-                animationType="slide"
-                transparent={true}
+            <Notify
                 visible={modalVisible}
-                onRequestClose={() => {
-                    setModalVisible(!modalVisible);
-                }}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalView}>
-                    <Text style={styles.modalText}><b>This is a book</b></Text>
-                        <Text style={styles.modalText}>This is disposable.</Text>
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={() => setModalVisible(false)}
-                            >
-                                <Text style={styles.buttonText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={saveToFirebase}
-                            >
-                                <Text style={styles.buttonText}>Save</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+                header="This is a book"
+                text="This is disposable."
+                onCancel={() => setModalVisible(false)}
+                onSave={saveToFirebase}
+            />
         </View>
     );
 };
@@ -157,49 +136,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         borderTopWidth: 1,
         borderTopColor: '#ccc',
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalView: {
-        width: 300,
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 20,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    modalText: {
-        fontSize: 18,
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-    },
-    button: {
-        backgroundColor: '#2196F3',
-        padding: 10,
-        borderRadius: 5,
-        margin: 10,
-        minWidth: 100,
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 16,
     },
 });
 
