@@ -11,7 +11,6 @@ const HistoryScreen = () => {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
     const [notifyMode, setNotifyMode] = useState("");
-    const namesArr = ['Polythene Bag', 'Slipper', 'Glass Bottle', 'Food Item', 'Paper/Board'];
     const idToDelete = useRef(null);
 
     useEffect(() => {
@@ -30,7 +29,7 @@ const HistoryScreen = () => {
 
     const deleteImage = async () => {
         setLoading(true);
-        await FirebaseService.delete('img-data', idToDelete);
+        await FirebaseService.delete('img-data', idToDelete.current);
         fetchImages();
     };
 
@@ -48,7 +47,7 @@ const HistoryScreen = () => {
     const btnClicked = (type, id) => {
         setOpen(true);
         setNotifyMode(type);
-        if (id) idToDelete.current = id;
+        idToDelete.current = id;
     }
 
     return (
@@ -67,7 +66,7 @@ const HistoryScreen = () => {
                                 <Image source={{ uri: item.uri }} style={styles.thumbnail} />
                             </TouchableOpacity>
                             <View style={styles.textContainer}>
-                                <Text style={styles.title} numberOfLines={1}>{namesArr[Math.floor(Math.random() * namesArr.length)]}</Text>
+                                <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
                                 <Text style={styles.type}>{item.type}</Text>
                             </View>
                             <TouchableOpacity onPress={() => btnClicked("Delete", item.id)}>

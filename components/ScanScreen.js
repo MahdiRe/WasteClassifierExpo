@@ -11,6 +11,7 @@ const ScanScreen = () => {
     const [isCameraVisible, setIsCameraVisible] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
 
     useEffect(() => {
         const getCameraPermissions = async () => {
@@ -34,6 +35,14 @@ const ScanScreen = () => {
         }
     };
 
+    const toggleCameraType = () => {
+        setCameraType((current) =>
+            current === Camera.Constants.Type.back
+                ? Camera.Constants.Type.front
+                : Camera.Constants.Type.back
+        );
+    };
+
     const handleCheck = () => {
         setModalVisible(true);
     };
@@ -47,13 +56,12 @@ const ScanScreen = () => {
             setIsCameraVisible(true);
         } catch (err) {
             console.error('Error saving images to Firebase:', err);
-        }finally{
+        } finally {
             setModalVisible(false);
             setLoading(false);
         }
     }
 
-    // Check permission status and render appropriate UI
     if (hasPermission === null) {
         return <View />;
     }
@@ -71,7 +79,7 @@ const ScanScreen = () => {
     return (
         <View style={styles.container}>
             {isCameraVisible ? (
-                <Camera style={styles.camera} ref={(ref) => setCameraRef(ref)} />
+                <Camera style={styles.camera} type={cameraType} ref={(ref) => setCameraRef(ref)} />
             ) : (
                 <View style={styles.previewContainer}>
                     {image ? (
@@ -84,9 +92,15 @@ const ScanScreen = () => {
 
             <View style={styles.bottomContainer}>
                 {!image ? (
-                    <Button title="Capture" onPress={takePicture} disabled={!hasPermission} />
+                    <>
+                        <Button title="Capture" onPress={takePicture} disabled={!hasPermission} />
+                        <Button title="Toggle Camera" onPress={toggleCameraType} />
+                    </>
                 ) : (
-                    <Button title="Re-Capture" onPress={takePicture} disabled={!hasPermission} />
+                    <>
+                        <Button title="Re-Capture" onPress={takePicture} disabled={!hasPermission} />
+                        <Button title="Toggle Camera" onPress={toggleCameraType} />
+                    </>
                 )}
                 <Button title="Check" onPress={handleCheck} disabled={!image} />
             </View>

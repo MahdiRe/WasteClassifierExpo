@@ -1,10 +1,12 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Button, Image, FlatList, Text, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import FirebaseService from './config/FirebaseService';
 import { MaterialIcons } from '@expo/vector-icons';
 import Notify from './Notify';
+import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UploadScreen = () => {
     const [images, setImages] = useState([]);
@@ -17,6 +19,20 @@ const UploadScreen = () => {
     const [notifyMode, setNotifyMode] = useState("");
     const uriToDelete = useRef(null);
 
+    // Detect network connectivity and sync offline images when online
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+            if (state.isConnected) {
+                // Sync offline images when online
+                syncOfflineImages();
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
+
     // Handle image picking
     const pickImages = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -28,6 +44,7 @@ const UploadScreen = () => {
         if (!result.canceled) {
             const newImage = result.assets[0];
             newImage.type = images.length % 2 === 0 ? 'Organic' : 'Disposable';
+            newImage.name = namesArr[Math.floor(Math.random() * namesArr.length)];
             setImages((prevImages) => [...prevImages, newImage]);
         }
     };
@@ -53,18 +70,43 @@ const UploadScreen = () => {
     const saveToFirebase = async () => {
         setLoading(true);
         try {
-            for (const image of images) {
-                if (selectedImages.includes(image.uri)) {
-                    await FirebaseService.setData('img-data', image);
+            const netInfo = await NetInfo.fetch();
+            if (netInfo.isConnected) {
+                for (const image of images) {
+                    if (selectedImages.includes(image.uri)) {
+                        await FirebaseService.setData('img-data', image);
+                    }
                 }
+                setSelectedImages([]);
+                setImages([]);
+            } else {
+                const offlineImages = await AsyncStorage.getItem('offlineImages') || '[]';
+                const updatedImages = [...JSON.parse(offlineImages), ...images.filter(image => selectedImages.includes(image.uri))];
+                await AsyncStorage.setItem('offlineImages', JSON.stringify(updatedImages));
+                console.log('Offline', 'Images saved locally. They will be uploaded when you are online.');
             }
-            setSelectedImages([]);
-            setImages([]);
         } catch (error) {
-            console.error('Error saving images to Firebase:', error);
+            console.error('Error saving images:', error);
         } finally {
             setLoading(false);
             setNotifyVisible(false);
+        }
+    };
+
+    // Sync offline images when internet is available
+    const syncOfflineImages = async () => {
+        try {
+            const offlineImages = await AsyncStorage.getItem('offlineImages');
+            if (offlineImages) {
+                const imagesToSync = JSON.parse(offlineImages);
+                for (const image of imagesToSync) {
+                    await FirebaseService.setData('img-data', image);
+                }
+                await AsyncStorage.removeItem('offlineImages');
+                console.log('Sync Complete', 'Offline images have been uploaded to Firebase.');
+            }
+        } catch (error) {
+            console.error('Error syncing offline images:', error);
         }
     };
 
@@ -95,7 +137,7 @@ const UploadScreen = () => {
                                 <Image source={{ uri: item.uri }} style={styles.thumbnail} />
                             </TouchableOpacity>
                             <View style={styles.textContainer}>
-                                <Text style={styles.title} numberOfLines={1}>{namesArr[Math.floor(Math.random() * namesArr.length)]}</Text>
+                                <Text style={styles.title} numberOfLines={1}>{item.name}</Text>
                                 <Text style={styles.type}>{item.type}</Text>
                             </View>
                             <TouchableOpacity onPress={() => btnClicked('Delete', item.uri)}>

@@ -11,7 +11,7 @@ const Notify = ({ visible, text, header, onCancel, onSave, saveload, saveText, l
         >
             <View style={styles.modalContainer}>
                 <View style={styles.modalView}>
-                    {header && <Text style={styles.modalText}><b>{header}</b></Text>}
+                    {header && <Text style={styles.modalTextB}>{header || ""}</Text>}
                     <Text style={styles.modalText}>{text}</Text>
 
                     {saveload ? (
@@ -70,6 +70,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginBottom: 15,
         textAlign: 'center',
+    },
+    modalTextB: {
+        fontSize: 18,
+        marginBottom: 15,
+        textAlign: 'center',
+        fontWeight: "bold"
     },
     modalButtons: {
         flexDirection: 'row',
