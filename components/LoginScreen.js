@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Image } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { View, TextInput, Button, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './config/FirebaseService';
 
 const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [error, setError] = useState();
+    const [success, setSuccess] = useState();
+    const [isSignUp, setIsSignUp] = useState(false);
 
     const handleLogin = async () => {
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-            navigation.navigate('Home');
+            if (isSignUp) {
+                await createUserWithEmailAndPassword(auth, email, password);
+                setSuccess('Registration successful. You can now log in.');
+                setError();
+                setIsSignUp(false); // Switch back to login after registration
+            } else {
+                await signInWithEmailAndPassword(auth, email, password);
+                setSuccess();
+                setError();
+                navigation.navigate('Home');
+            }
         } catch (error) {
             setError(error.message);
+            setSuccess();
         }
     };
 
@@ -24,7 +36,7 @@ const LoginScreen = ({ navigation }) => {
                     source={require('../assets/waste-bins.jpg')}
                     style={styles.image}
                 />
-                <Text style={styles.title}>Waste Classifier</Text>
+                <Text style={styles.title}>{isSignUp ? 'Register' : 'Waste Classifier'}</Text>
             </View>
             <TextInput
                 style={styles.input}
@@ -40,7 +52,13 @@ const LoginScreen = ({ navigation }) => {
                 secureTextEntry
             />
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            <Button title="Login" onPress={handleLogin} />
+            {success ? <Text style={styles.success}>{success}</Text> : null}
+            <Button title={isSignUp ? "Register" : "Login"} onPress={handleLogin} />
+            <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+                <Text style={styles.switchText}>
+                    {isSignUp ? "Already have an account? Log In" : "Don't have an account? Register"}
+                </Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -59,8 +77,10 @@ const styles = StyleSheet.create({
     error: {
         color: 'red',
     },
+    success: {
+        color: 'green'
+    },
     titleContainer: {
-        height: '25%',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -70,9 +90,14 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     image: {
-        width: 100,   // Adjust the width of the image
-        height: 100,  // Adjust the height of the image
-        marginBottom: 40,  // Add margin between image and text
+        width: 100,
+        height: 100,
+        marginBottom: 40,
+    },
+    switchText: {
+        marginTop: 20,
+        color: '#0645AD',
+        textAlign: 'center'
     },
 });
 
