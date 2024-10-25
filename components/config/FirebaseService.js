@@ -2,6 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, query, where } from 'firebase/firestore';
 import { getStorage, ref, deleteObject } from 'firebase/storage'; // To handle storage deletion if needed
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
     apiKey: "AIzaSyAOyGt5f4IQom3ZN9_J8KKxRierrt0vwoU",
@@ -65,4 +66,5 @@ class FirebaseService {
     }
 }
 
+export const auth = getAuth(app);
 export default new FirebaseService();

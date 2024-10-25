@@ -7,12 +7,14 @@ import HistoryScreen from '../components/HistoryScreen';
 import FindNearbyScreen from '../components/FindNearbyScreen';
 import ComplaintsScreen from '../components/ComplaintsScreen';
 import ContactUsScreen from '../components/ContactUsScreen';
+import LoginScreen from '../components/LoginScreen';
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
     return (
-        <Stack.Navigator initialRouteName="Home">
+        <Stack.Navigator initialRouteName="Login">
+            <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Home" component={HomePage} />
             <Stack.Screen name="Scan" component={ScanScreen} />
             <Stack.Screen name="Upload" component={UploadScreen} />
