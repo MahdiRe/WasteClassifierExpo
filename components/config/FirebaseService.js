@@ -1,8 +1,9 @@
-// FirebaseService.js
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, query, where } from 'firebase/firestore';
-import { getStorage, ref, deleteObject } from 'firebase/storage'; // To handle storage deletion if needed
-import { getAuth } from 'firebase/auth';
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { getStorage, deleteObject } from 'firebase/storage';
+import { getAuth, initializeAuth, browserLocalPersistence, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const firebaseConfig = {
     apiKey: "AIzaSyAOyGt5f4IQom3ZN9_J8KKxRierrt0vwoU",
@@ -17,6 +18,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 const storage = getStorage(app);
+
+let auth;
+if (Platform.OS === 'web') {
+  auth = getAuth(app);
+  auth.setPersistence(browserLocalPersistence);  // or browserSessionPersistence based on your needs
+} else {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+}
 
 class FirebaseService {
     async setData(collectionName, dataObject) {
@@ -66,5 +77,5 @@ class FirebaseService {
     }
 }
 
-export const auth = getAuth(app);
 export default new FirebaseService();
+export { auth };
