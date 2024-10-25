@@ -11,7 +11,8 @@ const UploadScreen = () => {
     const [images, setImages] = useState([]);
     const [selectedImages, setSelectedImages] = useState([]);
     const [loading, setLoading] = useState(false);
-    const namesArr = ['Polythene Bag', 'Slipper', 'Glass Bottle', 'Food Item', 'Paper/Board'];
+    const namesArr = ['Polythene Bag', 'Apple', 'Glass Bottle', 'Banana', 'Paper/Board'];
+    const typeArr = ['Disposable', 'Organic', 'Disposable', 'Organic', 'Disposable'];
     const [notifyVisible, setNotifyVisible] = useState(false);
     const [notifyMode, setNotifyMode] = useState("");
     const uriToDelete = useRef(null);
@@ -40,8 +41,8 @@ const UploadScreen = () => {
 
         if (!result.canceled) {
             const newImage = result.assets[0];
-            newImage.type = images.length % 2 === 0 ? 'Organic' : 'Disposable';
-            newImage.name = namesArr[Math.floor(Math.random() * namesArr.length)];
+            newImage.type = typeArr[images.length];
+            newImage.name = namesArr[images.length];
             setImages((prevImages) => [...prevImages, newImage]);
         }
     };

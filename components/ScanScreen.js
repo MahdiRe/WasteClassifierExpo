@@ -107,7 +107,7 @@ const ScanScreen = () => {
 
             <Notify
                 visible={modalVisible}
-                header="This is a book"
+                header="This is a polythene bag"
                 text="This is disposable."
                 onCancel={() => setModalVisible(false)}
                 onSave={saveToFirebase}

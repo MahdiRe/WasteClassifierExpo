@@ -1,17 +1,17 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from 'firebase/firestore';
-import { getStorage, deleteObject } from 'firebase/storage';
+import { getStorage } from 'firebase/storage';
 import { getAuth, initializeAuth, browserLocalPersistence, getReactNativePersistence } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAOyGt5f4IQom3ZN9_J8KKxRierrt0vwoU",
+    apiKey: "",
     authDomain: "wasteclassifierexpo.firebaseapp.com",
     projectId: "wasteclassifierexpo",
     storageBucket: "wasteclassifierexpo.appspot.com",
-    messagingSenderId: "20259606665",
-    appId: "1:20259606665:android:85bbd80249d7399d757658",
+    messagingSenderId: "",
+    appId: "",
 };
 
 // Initialize Firebase
