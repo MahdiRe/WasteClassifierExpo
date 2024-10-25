@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Button, Image, StyleSheet, Text, Modal, TouchableOpacity } from 'react-native';
 import { Camera } from 'expo-camera';
 import FirebaseService from './config/FirebaseService';
-import Notify from './Notify';
+import Notify from './common/Notify';
 
 const ScanScreen = () => {
     const [hasPermission, setHasPermission] = useState(null);
